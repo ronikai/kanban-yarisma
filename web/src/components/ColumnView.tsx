@@ -3,13 +3,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CirclePlus, Pencil, Trash2 } from 'lucide-react';
 import { columnSwatch } from '../design';
-import type { Card, Column } from '../types';
+import type { Card, Column, Extras } from '../types';
 import { CardTile } from './CardTile';
 
 type Props = {
   column: Column;
   index: number;
   isFiltering: boolean;
+  extras: Extras;
   onAddCard: (columnId: string) => void;
   onOpenCard: (card: Card, columnId: string) => void;
   onDeleteCard: (card: Card, columnId: string, index: number) => void;
@@ -21,6 +22,7 @@ export function ColumnView({
   column,
   index,
   isFiltering,
+  extras,
   onAddCard,
   onOpenCard,
   onDeleteCard,
@@ -121,6 +123,7 @@ export function ColumnView({
               card={card}
               columnId={column.id}
               index={cardIndex}
+              extra={extras[card.id]}
               onOpen={onOpenCard}
               onDelete={onDeleteCard}
             />

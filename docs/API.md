@@ -77,6 +77,21 @@ Her hata aynı biçimde döner:
 - Türkçe duyarsızdır: `İSTANBUL`, `istanbul`, `IŞIK` ↔ `isik`.
 - `q`, başlık + açıklama + etiket içinde aranır.
 
+## Ek uçlar (sözleşme dışı, opsiyonel)
+
+Yarışma sözleşmesindeki uçlar değişmez; bunlar üstüne eklenen ekstralardır.
+
+| Metot | Yol | Gövde | Yanıt |
+|---|---|---|---|
+| GET | `/api/extras` | — | `{ "kartId": { color, emoji, checklist:[…] } }` |
+| PATCH | `/api/cards/:id/meta` | `{ color?, emoji? }` | 200 · güncel ekstra |
+| POST | `/api/cards/:id/checklist` | `{ text }` | 201 · alt görev |
+| PATCH | `/api/checklist/:itemId` | `{ text?, done? }` | 200 · güncel alt görev |
+| DELETE | `/api/checklist/:itemId` | — | 204 |
+
+`card_meta` ve `checklist_items` ayrı tablolardadır; kart silinince cascade ile temizlenir.
+`/api/board` kart şeması **değişmez** (B2 korunur).
+
 ## Kalıcılık
 
 Veri `api/data/kanban.db` (SQLite) dosyasındadır. Sunucu yeniden başlatıldığında veri korunur.

@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
-import type { Board, Card, Toast } from './types';
+import type { Board, Card, CardExtra, Extras, Toast } from './types';
 
 const KEY = ['board'] as const;
+const EXTRAS_KEY = ['extras'] as const;
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const uid = () => crypto.randomUUID();
 
@@ -80,8 +81,17 @@ export function useKanban(notify: Notify) {
 
   const board = query.data;
 
+  const extrasQuery = useQuery({
+    queryKey: EXTRAS_KEY,
+    queryFn: api.getExtras,
+    retry: 1,
+    staleTime: 5000,
+  });
+  const extras: Extras = extrasQuery.data ?? {};
+
   const [search, setSearch] = useState('');
   const [labelFilter, setLabelFilter] = useState<string | null>(null);
+  const [overdueOnly, setOverdueOnly] = useState(false);
 
   const setBoard = useCallback(
     (updater: (current: Board) => Board) => {
@@ -95,6 +105,21 @@ export function useKanban(notify: Notify) {
   const invalidate = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: KEY });
   }, [queryClient]);
+
+  const invalidateExtras = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: EXTRAS_KEY });
+  }, [queryClient]);
+
+  const setExtraLocal = useCallback(
+    (cardId: string, updater: (extra: CardExtra) => CardExtra) => {
+      queryClient.setQueryData<Extras>(EXTRAS_KEY, (current) => {
+        const base = current ?? {};
+        const extra = base[cardId] ?? { color: null, emoji: null, checklist: [] };
+        return { ...base, [cardId]: updater(extra) };
+      });
+    },
+    [queryClient],
+  );
 
   const fail = useCallback(
     (error: unknown) => {
@@ -279,8 +304,68 @@ export function useKanban(notify: Notify) {
     mutationFn: (next: Board) => api.importBoard(next),
     onSuccess: (data) => {
       queryClient.setQueryData(KEY, data.board);
+      void queryClient.invalidateQueries({ queryKey: EXTRAS_KEY });
       notify({ tone: 'success', message: 'Pano içe aktarıldı' });
     },
+    onError: (error) => fail(error),
+  });
+
+  const setCardMeta = useMutation({
+    mutationFn: ({
+      id,
+      ...patch
+    }: {
+      id: string;
+      color?: string | null;
+      emoji?: string | null;
+    }) => api.setCardMeta(id, patch),
+    onSuccess: (extra, vars) => setExtraLocal(vars.id, () => extra),
+    onError: (error) => fail(error),
+  });
+
+  const addChecklist = useMutation({
+    mutationFn: ({ cardId, text }: { cardId: string; text: string }) =>
+      api.addChecklistItem(cardId, text),
+    onSuccess: (item, vars) =>
+      setExtraLocal(vars.cardId, (extra) => ({
+        ...extra,
+        checklist: [...extra.checklist, item],
+      })),
+    onError: (error) => fail(error),
+  });
+
+  const toggleChecklist = useMutation({
+    mutationFn: ({ itemId, done }: { itemId: string; done: boolean }) =>
+      api.updateChecklistItem(itemId, { done }),
+    onMutate: ({ itemId, done }) => {
+      queryClient.setQueryData<Extras>(EXTRAS_KEY, (current) => {
+        if (!current) return current;
+        const next: Extras = {};
+        for (const [cardId, extra] of Object.entries(current)) {
+          next[cardId] = {
+            ...extra,
+            checklist: extra.checklist.map((item) =>
+              item.id === itemId ? { ...item, done } : item,
+            ),
+          };
+        }
+        return next;
+      });
+    },
+    onError: (error) => {
+      fail(error);
+      invalidateExtras();
+    },
+  });
+
+  const deleteChecklist = useMutation({
+    mutationFn: ({ itemId }: { cardId: string; itemId: string }) =>
+      api.deleteChecklistItem(itemId),
+    onSuccess: (_data, vars) =>
+      setExtraLocal(vars.cardId, (extra) => ({
+        ...extra,
+        checklist: extra.checklist.filter((item) => item.id !== vars.itemId),
+      })),
     onError: (error) => fail(error),
   });
 
@@ -299,13 +384,21 @@ export function useKanban(notify: Notify) {
     if (!board) return undefined;
     const needle = fold(search.trim());
     const wanted = labelFilter ? fold(labelFilter) : '';
-    if (!needle && !wanted) return board;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!needle && !wanted && !overdueOnly) return board;
 
     return {
       columns: board.columns.map((column) => ({
         ...column,
         cards: column.cards.filter((card) => {
           if (wanted && fold(card.label ?? '') !== wanted) return false;
+          if (overdueOnly) {
+            if (!card.dueDate) return false;
+            const due = new Date(card.dueDate);
+            if (Number.isNaN(due.getTime()) || due >= today) return false;
+          }
           if (!needle) return true;
           return fold(
             `${card.title} ${card.description ?? ''} ${card.label ?? ''}`,
@@ -313,18 +406,19 @@ export function useKanban(notify: Notify) {
         }),
       })),
     };
-  }, [board, search, labelFilter]);
+  }, [board, search, labelFilter, overdueOnly]);
 
   const matchCount =
     visible?.columns.reduce((total, column) => total + column.cards.length, 0) ?? 0;
 
-  const isFiltering = Boolean(search.trim() || labelFilter);
+  const isFiltering = Boolean(search.trim() || labelFilter || overdueOnly);
   const activeCount = board?.columns.length ?? 0;
 
   return {
     board,
     visible,
     labels,
+    extras,
     matchCount,
     isFiltering,
     activeCount,
@@ -332,6 +426,8 @@ export function useKanban(notify: Notify) {
     setSearch,
     labelFilter,
     setLabelFilter,
+    overdueOnly,
+    setOverdueOnly,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
@@ -344,6 +440,10 @@ export function useKanban(notify: Notify) {
     updateColumn,
     deleteColumn,
     importBoard,
+    setCardMeta,
+    addChecklist,
+    toggleChecklist,
+    deleteChecklist,
   };
 }
 

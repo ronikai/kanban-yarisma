@@ -7,6 +7,9 @@ import { rootDir } from './db.js';
 import { HttpError, badRequest, notFound } from './http.js';
 import * as store from './store.js';
 import {
+  cardMetaSchema,
+  checklistCreateSchema,
+  checklistUpdateSchema,
   createCardSchema,
   createColumnSchema,
   importSchema,
@@ -97,10 +100,43 @@ app.post('/api/cards/:id/move', (req, res) => {
   res.json(store.moveCard(req.params.id, toColumnId, toIndex));
 });
 
+/* ------------------------------- kart ekstraları ------------------------------- */
+
+app.get('/api/extras', (_req, res) => {
+  res.json(store.getExtras());
+});
+
+app.patch('/api/cards/:id/meta', (req, res) => {
+  const meta = parse(cardMetaSchema, req.body);
+  const extra = store.setCardMeta(req.params.id, meta);
+  if (!extra) throw notFoundCard();
+  res.json(extra);
+});
+
+app.post('/api/cards/:id/checklist', (req, res) => {
+  const { text } = parse(checklistCreateSchema, req.body);
+  const item = store.addChecklistItem(req.params.id, text);
+  if (!item) throw notFoundCard();
+  res.status(201).json(item);
+});
+
+app.patch('/api/checklist/:itemId', (req, res) => {
+  const patch = parse(checklistUpdateSchema, req.body);
+  const item = store.updateChecklistItem(req.params.itemId, patch);
+  if (!item) throw notFoundItem();
+  res.json(item);
+});
+
+app.delete('/api/checklist/:itemId', (req, res) => {
+  if (!store.deleteChecklistItem(req.params.itemId)) throw notFoundItem();
+  res.status(204).end();
+});
+
 /* ------------------------------- hata yönetimi ------------------------------- */
 
 const notFoundColumn = () => notFound('Kolon bulunamadı');
 const notFoundCard = () => notFound('Kart bulunamadı');
+const notFoundItem = () => notFound('Alt görev bulunamadı');
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Uç nokta bulunamadı' } });

@@ -31,4 +31,20 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_cards_column ON board_cards(column_id, ord);
+
+  CREATE TABLE IF NOT EXISTS card_meta (
+    card_id TEXT PRIMARY KEY REFERENCES board_cards(id) ON DELETE CASCADE,
+    color   TEXT,
+    emoji   TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS checklist_items (
+    id      TEXT PRIMARY KEY,
+    card_id TEXT NOT NULL REFERENCES board_cards(id) ON DELETE CASCADE,
+    text    TEXT NOT NULL,
+    done    INTEGER NOT NULL DEFAULT 0,
+    ord     INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_checklist_card ON checklist_items(card_id, ord);
 `);

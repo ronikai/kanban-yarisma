@@ -282,6 +282,130 @@ export function searchCards(q?: string, label?: string): CardWithColumn[] {
     .map((card) => ({ ...toCard(card), columnId: card.columnId }));
 }
 
+/* ----------------------------- kart ekstraları ----------------------------- */
+
+export type ChecklistItem = { id: string; text: string; done: boolean };
+export type CardExtra = {
+  color: string | null;
+  emoji: string | null;
+  checklist: ChecklistItem[];
+};
+export type Extras = Record<string, CardExtra>;
+
+const metaStmt = db.prepare(
+  'SELECT card_id AS cardId, color, emoji FROM card_meta',
+);
+const checklistStmt = db.prepare(
+  `SELECT id, card_id AS cardId, text, done
+   FROM checklist_items ORDER BY ord ASC, rowid ASC`,
+);
+
+function blankExtra(): CardExtra {
+  return { color: null, emoji: null, checklist: [] };
+}
+
+export function getExtras(): Extras {
+  const extras: Extras = {};
+  const ensure = (cardId: string) => (extras[cardId] ??= blankExtra());
+
+  for (const row of metaStmt.all() as {
+    cardId: string;
+    color: string | null;
+    emoji: string | null;
+  }[]) {
+    const extra = ensure(row.cardId);
+    extra.color = row.color ?? null;
+    extra.emoji = row.emoji ?? null;
+  }
+
+  for (const row of checklistStmt.all() as {
+    id: string;
+    cardId: string;
+    text: string;
+    done: number;
+  }[]) {
+    ensure(row.cardId).checklist.push({
+      id: row.id,
+      text: row.text,
+      done: row.done === 1,
+    });
+  }
+
+  return extras;
+}
+
+export function setCardMeta(
+  cardId: string,
+  patch: { color?: string | null; emoji?: string | null },
+): CardExtra | null {
+  if (!getCard(cardId)) return null;
+  const existing = db
+    .prepare('SELECT color, emoji FROM card_meta WHERE card_id = ?')
+    .get(cardId) as { color: string | null; emoji: string | null } | undefined;
+
+  const color = patch.color !== undefined ? patch.color : (existing?.color ?? null);
+  const emoji = patch.emoji !== undefined ? patch.emoji : (existing?.emoji ?? null);
+
+  db.prepare(
+    `INSERT INTO card_meta (card_id, color, emoji) VALUES (?, ?, ?)
+     ON CONFLICT(card_id) DO UPDATE SET color = excluded.color, emoji = excluded.emoji`,
+  ).run(cardId, color, emoji);
+
+  return {
+    color,
+    emoji,
+    checklist: getExtras()[cardId]?.checklist ?? [],
+  };
+}
+
+export function addChecklistItem(cardId: string, text: string): ChecklistItem | null {
+  if (!getCard(cardId)) return null;
+  const row = db
+    .prepare('SELECT COALESCE(MAX(ord), -1) AS m FROM checklist_items WHERE card_id = ?')
+    .get(cardId) as { m: number };
+  const id = randomUUID();
+  db.prepare(
+    'INSERT INTO checklist_items (id, card_id, text, done, ord) VALUES (?, ?, ?, 0, ?)',
+  ).run(id, cardId, text, row.m + 1);
+  return { id, text, done: false };
+}
+
+export function updateChecklistItem(
+  id: string,
+  patch: { text?: string; done?: boolean },
+): ChecklistItem | null {
+  const existing = db
+    .prepare('SELECT id, text, done FROM checklist_items WHERE id = ?')
+    .get(id) as { id: string; text: string; done: number } | undefined;
+  if (!existing) return null;
+
+  const text = patch.text !== undefined ? patch.text : existing.text;
+  const done = patch.done !== undefined ? patch.done : existing.done === 1;
+  db.prepare('UPDATE checklist_items SET text = ?, done = ? WHERE id = ?').run(
+    text,
+    done ? 1 : 0,
+    id,
+  );
+  return { id, text, done };
+}
+
+export function deleteChecklistItem(id: string): boolean {
+  const existing = db
+    .prepare('SELECT card_id AS cardId FROM checklist_items WHERE id = ?')
+    .get(id) as { cardId: string } | undefined;
+  if (!existing) return false;
+
+  db.prepare('DELETE FROM checklist_items WHERE id = ?').run(id);
+  const remaining = (
+    db
+      .prepare('SELECT id FROM checklist_items WHERE card_id = ? ORDER BY ord ASC')
+      .all(existing.cardId) as { id: string }[]
+  ).map((row) => row.id);
+  const update = db.prepare('UPDATE checklist_items SET ord = ? WHERE id = ?');
+  remaining.forEach((itemId, index) => update.run(index, itemId));
+  return true;
+}
+
 /* ----------------------------- import / export ----------------------------- */
 
 export type ImportBoard = {

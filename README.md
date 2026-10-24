@@ -35,7 +35,13 @@ npm --prefix web install && npm --prefix web run dev   # :5173
 - Kolon ve kart oluşturma, düzenleme, silme (hepsi API üzerinden)
 - Kolon adını çift tıklayıp yeniden adlandırma
 - Kartları kolonlar arasında ve kolon içinde sürükle-bırak (`@dnd-kit`)
-- Kart detayı: açıklama, etiket, son tarih; geciken kartlar işaretli
+- Kart detayı: açıklama, etiket, son tarih, **kapak rengi + emoji**, **alt görev listesi** (ilerleme çubuğu)
+- **Komut paleti** (`Ctrl/⌘+K`): kart ara, tema/şablon/eylem çalıştır
+- **Pano nabzı:** toplam kart, geciken, bu hafta, alt görev tamamlanma oranı
+- **Takvim görünümü:** aylık ızgara + önümüzdeki 7 gün ajandası
+- **Kayıtlı filtreler** ve tek tıkla “Geciken” filtresi
+- **PNG dışa aktarma** ve hazır **şablon panolar** (Sprint / İçerik / Kişisel)
+- **Ses efektleri**, **konfeti**, **hareketi azalt** (ayarlardan aç/kapat)
 - Metin araması + etiket filtresi (birlikte, Türkçe duyarsız: `İSTANBUL` ↔ `istanbul`)
 - Yükleniyor / boş / hata durumları, iyimser güncelleme ve hata olunca geri alma
 - Klavye: `N` yeni kart, `/` aramaya odak, `Esc` kapat, `?` kısayollar
@@ -111,4 +117,7 @@ npm run deploy            # build + surge web/dist kanban-ajan.surge.sh
 5. Kolon adını çift tıkla, değiştir; yeni kolon ekle.
 6. `N` / `/` / `?` kısayollarını göster; bir kart sil ve "Geri al".
 7. Üstteki indirme simgesiyle yedek al; API'yi kapatıp hata ekranını göster, tekrar dene.
+8. `Ctrl/⌘+K` ile komut paletini aç: tema değiştir, takvime geç, kart bul.
+9. Kart detayında kapak rengi + emoji + alt görev ekle; kartta ilerleme çubuğunu göster.
+10. “Bitti” kolonuna kart taşı: konfeti + ses (ayarlardan kapatılabilir).
 

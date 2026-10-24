@@ -33,3 +33,23 @@ export type CardDraft = {
   label: string;
   dueDate: string;
 };
+
+export type ChecklistItem = { id: string; text: string; done: boolean };
+
+export type CardExtra = {
+  color: string | null;
+  emoji: string | null;
+  checklist: ChecklistItem[];
+};
+
+export type Extras = Record<string, CardExtra>;
+
+export type SavedFilter = {
+  id: string;
+  name: string;
+  q: string;
+  label: string | null;
+  overdue: boolean;
+};
+
+export type ViewMode = 'board' | 'calendar';

@@ -1,4 +1,12 @@
-import type { Board, Card, CardWithColumn, Column } from './types';
+import type {
+  Board,
+  Card,
+  CardExtra,
+  CardWithColumn,
+  ChecklistItem,
+  Column,
+  Extras,
+} from './types';
 
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
@@ -85,6 +93,20 @@ export const api = {
 
   importBoard: (board: Board) =>
     request<{ board: Board }>('/api/import', json('POST', { board })),
+
+  getExtras: () => request<Extras>('/api/extras'),
+
+  setCardMeta: (id: string, patch: { color?: string | null; emoji?: string | null }) =>
+    request<CardExtra>(`/api/cards/${id}/meta`, json('PATCH', patch)),
+
+  addChecklistItem: (cardId: string, text: string) =>
+    request<ChecklistItem>(`/api/cards/${cardId}/checklist`, json('POST', { text })),
+
+  updateChecklistItem: (id: string, patch: { text?: string; done?: boolean }) =>
+    request<ChecklistItem>(`/api/checklist/${id}`, json('PATCH', patch)),
+
+  deleteChecklistItem: (id: string) =>
+    request<void>(`/api/checklist/${id}`, json('DELETE')),
 };
 
-export type { Card, Column, Board };
+export type { Board, Card, CardExtra, ChecklistItem, Column, Extras };

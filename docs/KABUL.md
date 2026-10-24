@@ -1,6 +1,6 @@
 # KABUL KRİTERLERİ (30 madde / 100 puan)
 
-Otomatik test: `npm run smoke` — 21 kontrol.
+Otomatik test: `npm run smoke` — 23 kontrol.
 
 ## A · Backend (40 puan) — smoke ile doğrulandı
 
@@ -49,7 +49,7 @@ Otomatik test: `npm run smoke` — 21 kontrol.
 
 ## Doğrulama notları
 
-- `npm run smoke` → 21/21 geçti
+- `npm run smoke` → 23/23 geçti
 - 120 kart + 6 kolon import provası → donma yok, sıralar tutarlı
 - Sunucu kapat-aç → veri korunuyor
 - Temiz klasörde `npm run install:all && npm run dev` → iki sunucu kalkıyor

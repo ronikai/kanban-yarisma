@@ -216,6 +216,40 @@ try {
     'B9b import mevcut veriyi temizler',
     wiped.status === 200 && wipedBoard.json.columns.length === 1 && wipedBoard.json.columns[0].id === 'only',
   );
+
+  /* Ekstralar: kapak rengi, emoji, checklist */
+  await call('POST', '/import', snapshot);
+  const extraCard = (
+    await call('POST', '/cards', {
+      columnId: snapshot.board.columns[0].id,
+      title: 'Ekstra kart',
+    })
+  ).json;
+  const meta = await call('PATCH', `/cards/${extraCard.id}/meta`, {
+    color: '#ef5a45',
+    emoji: '🚀',
+  });
+  const item = await call('POST', `/cards/${extraCard.id}/checklist`, {
+    text: 'Alt görev 1',
+  });
+  const toggled = await call('PATCH', `/checklist/${item.json?.id}`, { done: true });
+  const extras = await call('GET', '/extras');
+  const stored = extras.json?.[extraCard.id];
+  check(
+    'Ekstra: kapak + emoji + checklist kalıcı',
+    meta.status === 200 &&
+      meta.json?.emoji === '🚀' &&
+      item.status === 201 &&
+      toggled.status === 200 &&
+      toggled.json?.done === true &&
+      stored?.checklist?.[0]?.done === true,
+  );
+  const deleteItem = await call('DELETE', `/checklist/${item.json?.id}`);
+  const missingItem = await call('PATCH', '/checklist/yok-boyle-id', { done: true });
+  check(
+    'Ekstra: checklist silme 204, olmayan id 404',
+    deleteItem.status === 204 && missingItem.status === 404,
+  );
 } catch (error) {
   failures.push('beklenmeyen hata');
   console.error(error);

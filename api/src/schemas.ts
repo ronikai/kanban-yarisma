@@ -57,6 +57,35 @@ export const moveCardSchema = z.object({
     .min(0, 'toIndex negatif olamaz'),
 });
 
+const colorSchema = z
+  .union([
+    z.string().regex(/^#[0-9a-fA-F]{6}$/, 'renk #RRGGBB olmalı'),
+    z.null(),
+  ])
+  .optional();
+
+const emojiSchema = z
+  .union([z.string().trim().max(8, 'emoji çok uzun'), z.null()])
+  .optional();
+
+export const cardMetaSchema = z.object({
+  color: colorSchema,
+  emoji: emojiSchema,
+});
+
+export const checklistCreateSchema = z.object({
+  text: z
+    .string({ required_error: 'text zorunlu' })
+    .trim()
+    .min(1, 'text zorunlu')
+    .max(500, 'text en fazla 500 karakter'),
+});
+
+export const checklistUpdateSchema = z.object({
+  text: z.string().trim().min(1, 'text zorunlu').max(500).optional(),
+  done: z.boolean().optional(),
+});
+
 const importCardSchema = z.object({
   id: z.string().min(1, 'kart id zorunlu'),
   title: titleSchema,

@@ -1,12 +1,13 @@
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
-import { CalendarDays, GripVertical, Trash2 } from 'lucide-react';
+import { CalendarDays, CheckSquare2, GripVertical, Trash2 } from 'lucide-react';
 import { dueInfo, labelSwatch } from '../design';
-import type { Card } from '../types';
+import type { Card, CardExtra } from '../types';
 
 type Props = {
   card: Card;
   columnId: string;
+  extra?: CardExtra;
   onOpen?: (card: Card, columnId: string) => void;
   onDelete?: (card: Card, columnId: string, index: number) => void;
   index?: number;
@@ -14,19 +15,35 @@ type Props = {
 
 function CardBody({
   card,
+  extra,
   onDelete,
   grip = true,
 }: {
   card: Card;
+  extra?: CardExtra;
   onDelete?: () => void;
   grip?: boolean;
 }) {
   const swatch = card.label ? labelSwatch(card.label) : null;
   const due = dueInfo(card.dueDate);
+  const checklist = extra?.checklist ?? [];
+  const doneCount = checklist.filter((item) => item.done).length;
+  const progress = checklist.length
+    ? Math.round((doneCount / checklist.length) * 100)
+    : 0;
 
   return (
     <>
+      {extra?.color && (
+        <div
+          className="-mx-3 -mt-3 mb-2 h-1.5 rounded-t-[12px]"
+          style={{ background: extra.color }}
+        />
+      )}
       <div className="flex items-start gap-2">
+        {extra?.emoji && (
+          <span className="shrink-0 text-[15px] leading-none">{extra.emoji}</span>
+        )}
         {swatch ? (
           <span
             className="inline-flex max-w-[150px] items-center gap-1.5 truncate rounded-md px-2 py-[3px] text-[11px] font-bold tracking-wide"
@@ -80,6 +97,21 @@ function CardBody({
         </p>
       )}
 
+      {checklist.length > 0 && (
+        <div className="mt-2 flex items-center gap-2">
+          <CheckSquare2 size={12} className="shrink-0 text-muted" />
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-paper-2">
+            <div
+              className="h-full rounded-full bg-mint transition-[width] duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <span className="font-mono text-[10px] font-bold text-muted">
+            {doneCount}/{checklist.length}
+          </span>
+        </div>
+      )}
+
       <div className="mt-2.5 flex items-center justify-end gap-1.5">
         {due && (
           <span
@@ -105,7 +137,14 @@ function CardBody({
   );
 }
 
-export function CardTile({ card, columnId, onOpen, onDelete, index = 0 }: Props) {
+export function CardTile({
+  card,
+  columnId,
+  extra,
+  onOpen,
+  onDelete,
+  index = 0,
+}: Props) {
   const sortable = useSortable({
     id: card.id,
     data: { type: 'card', columnId, card },
@@ -138,16 +177,17 @@ export function CardTile({ card, columnId, onOpen, onDelete, index = 0 }: Props)
     >
       <CardBody
         card={card}
+        extra={extra}
         onDelete={onDelete ? () => onDelete(card, columnId, index) : undefined}
       />
     </article>
   );
 }
 
-export function CardPreview({ card }: { card: Card }) {
+export function CardPreview({ card, extra }: { card: Card; extra?: CardExtra }) {
   return (
-    <div className="w-[280px] rotate-[2.5deg] rounded-[14px] border-2 border-ink/20 bg-surface p-3 shadow-float">
-      <CardBody card={card} grip={false} />
+    <div className="w-[280px] rotate-[2.5deg] scale-[1.03] rounded-[14px] border-2 border-ink/20 bg-surface p-3 shadow-pop">
+      <CardBody card={card} extra={extra} grip={false} />
     </div>
   );
 }

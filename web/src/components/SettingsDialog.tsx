@@ -1,14 +1,56 @@
-import { Check, Palette, X } from 'lucide-react';
+import { Check, Gauge, Palette, PartyPopper, Volume2, X } from 'lucide-react';
 import { THEMES, type Theme, type ThemeId } from '../themes';
 
 type Props = {
   open: boolean;
   activeId: ThemeId;
+  sound: boolean;
+  confetti: boolean;
+  reducedMotion: boolean;
   onSelect: (theme: Theme) => void;
+  onToggle: (key: 'sound' | 'confetti' | 'reducedMotion', value: boolean) => void;
   onClose: () => void;
 };
 
-export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
+function Switch({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+        checked ? 'bg-mint' : 'bg-line-2'
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-surface-2 shadow-sm transition-all ${
+          checked ? 'left-[22px]' : 'left-0.5'
+        }`}
+      />
+    </button>
+  );
+}
+
+export function SettingsDialog({
+  open,
+  activeId,
+  sound,
+  confetti,
+  reducedMotion,
+  onSelect,
+  onToggle,
+  onClose,
+}: Props) {
   if (!open) return null;
 
   return (
@@ -92,6 +134,57 @@ export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
               </button>
             );
           })}
+        </div>
+
+        <div className="mt-5 rounded-xl border border-line/80 bg-paper/40 p-3">
+          <p className="text-[12px] font-extrabold text-ink-2">Deneyim</p>
+          <div className="mt-2 space-y-1">
+            {[
+              {
+                key: 'sound' as const,
+                icon: <Volume2 size={14} />,
+                label: 'Ses efektleri',
+                note: 'Sürükleme, tamamlama ve hata sesleri',
+                value: sound,
+              },
+              {
+                key: 'confetti' as const,
+                icon: <PartyPopper size={14} />,
+                label: 'Konfeti',
+                note: 'Kart “Bitti” kolonuna taşınınca kutla',
+                value: confetti,
+              },
+              {
+                key: 'reducedMotion' as const,
+                icon: <Gauge size={14} />,
+                label: 'Hareketi azalt',
+                note: 'Animasyonları ve geçişleri en aza indir',
+                value: reducedMotion,
+              },
+            ].map((row) => (
+              <div
+                key={row.key}
+                className="flex items-center gap-2.5 rounded-lg px-1 py-1.5"
+              >
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-surface-2 text-muted">
+                  {row.icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12.5px] font-semibold text-ink">
+                    {row.label}
+                  </span>
+                  <span className="block text-[11px] leading-snug text-muted">
+                    {row.note}
+                  </span>
+                </span>
+                <Switch
+                  checked={row.value}
+                  label={row.label}
+                  onChange={(value) => onToggle(row.key, value)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-4 flex justify-end">

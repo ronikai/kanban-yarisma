@@ -10,10 +10,17 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import {
+  Bookmark,
+  CalendarDays,
   CircleHelp,
   CirclePlus,
+  Command,
   Download,
+  ImageDown,
   Layers,
+  LayoutGrid,
+  LayoutTemplate,
+  Palette,
   Plus,
   RotateCcw,
   Search,
@@ -23,21 +30,30 @@ import {
   X,
 } from 'lucide-react';
 import { api } from './api';
+import { CalendarView } from './components/CalendarView';
 import { CardDialog, type Draft } from './components/CardDialog';
 import { CardPreview } from './components/CardTile';
 import { ColumnView } from './components/ColumnView';
+import { CommandPalette, type PaletteItem } from './components/CommandPalette';
 import { HelpDialog } from './components/HelpDialog';
+import { SaveFilterDialog } from './components/SaveFilterDialog';
 import { SettingsDialog } from './components/SettingsDialog';
+import { StatsBar } from './components/StatsBar';
+import { TemplatesDialog } from './components/TemplatesDialog';
 import { Toasts } from './components/Toasts';
+import { burstConfetti, confettiEnabled } from './confetti';
 import { dueToIso, labelSwatch } from './design';
+import { setSoundEnabled, soundEnabled, sounds } from './sound';
+import { TEMPLATES, type BoardTemplate } from './templates';
+import { applyTheme, storedTheme, THEMES, type Theme } from './themes';
 import { findCard, useKanban } from './useKanban';
-import { applyTheme, storedTheme, type Theme } from './themes';
-import type { Card, Toast } from './types';
+import type { Card, SavedFilter, Toast, ViewMode } from './types';
 
 export default function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const notify = useCallback((toast: Omit<Toast, 'id'>) => {
+    if (toast.tone === 'error') sounds.error();
     const id = Date.now() + Math.random();
     setToasts((current) => [...current.slice(-3), { ...toast, id }]);
     window.setTimeout(
@@ -51,12 +67,15 @@ export default function App() {
     board,
     visible,
     labels,
+    extras,
     matchCount,
     isFiltering,
     search,
     setSearch,
     labelFilter,
     setLabelFilter,
+    overdueOnly,
+    setOverdueOnly,
     isLoading,
     isError,
     refetch,
@@ -71,9 +90,33 @@ export default function App() {
   const [addingColumn, setAddingColumn] = useState(false);
   const [columnTitle, setColumnTitle] = useState('');
   const [activeCard, setActiveCard] = useState<Card | null>(null);
+  const [view, setView] = useState<ViewMode>(() =>
+    localStorage.getItem('pano-gorunum') === 'calendar' ? 'calendar' : 'board',
+  );
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [saveFilterOpen, setSaveFilterOpen] = useState(false);
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
+    try {
+      const raw = localStorage.getItem('pano-kayitli-filtreler');
+      return raw ? (JSON.parse(raw) as SavedFilter[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [soundOn, setSoundOn] = useState(() => soundEnabled());
+  const [confettiOn, setConfettiOn] = useState(() => confettiEnabled());
+  const [reducedMotion, setReducedMotion] = useState(() => {
+    try {
+      return localStorage.getItem('pano-hareket') === 'az';
+    } catch {
+      return false;
+    }
+  });
 
   const searchRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
@@ -84,11 +127,66 @@ export default function App() {
     [board],
   );
 
+  const stats = useMemo(() => {
+    let overdue = 0;
+    let dueSoon = 0;
+    let checklistDone = 0;
+    let checklistTotal = 0;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const week = new Date(start);
+    week.setDate(week.getDate() + 7);
+
+    board?.columns.forEach((column) =>
+      column.cards.forEach((card) => {
+        if (card.dueDate) {
+          const due = new Date(card.dueDate);
+          if (!Number.isNaN(due.getTime())) {
+            if (due < start) overdue += 1;
+            else if (due <= week) dueSoon += 1;
+          }
+        }
+        const extra = extras[card.id];
+        if (extra) {
+          for (const item of extra.checklist) {
+            checklistTotal += 1;
+            if (item.done) checklistDone += 1;
+          }
+        }
+      }),
+    );
+
+    return { total: totalCards, overdue, dueSoon, checklistDone, checklistTotal };
+  }, [board, extras, totalCards]);
+
+  useEffect(() => {
+    document.documentElement.dataset.motion = reducedMotion ? 'reduced' : 'normal';
+    try {
+      localStorage.setItem('pano-hareket', reducedMotion ? 'az' : 'normal');
+    } catch {
+      /* yoksay */
+    }
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pano-gorunum', view);
+    } catch {
+      /* yoksay */
+    }
+  }, [view]);
+
   const editorColumn =
     board?.columns.find((column) => column.id === editor?.columnId) ?? null;
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setPaletteOpen(true);
+        return;
+      }
+
       const target = event.target as HTMLElement | null;
       const typing = Boolean(
         target &&
@@ -99,6 +197,18 @@ export default function App() {
       );
 
       if (event.key === 'Escape') {
+        if (paletteOpen) {
+          setPaletteOpen(false);
+          return;
+        }
+        if (templatesOpen) {
+          setTemplatesOpen(false);
+          return;
+        }
+        if (saveFilterOpen) {
+          setSaveFilterOpen(false);
+          return;
+        }
         if (editor) {
           setEditor(null);
           return;
@@ -119,7 +229,17 @@ export default function App() {
         return;
       }
 
-      if (typing || editor || helpOpen || settingsOpen) return;
+      if (
+        typing ||
+        editor ||
+        helpOpen ||
+        settingsOpen ||
+        paletteOpen ||
+        templatesOpen ||
+        saveFilterOpen
+      ) {
+        return;
+      }
 
       if (event.key === 'n' || event.key === 'N') {
         event.preventDefault();
@@ -136,12 +256,109 @@ export default function App() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [board, editor, helpOpen, settingsOpen, addingColumn]);
+  }, [
+    board,
+    editor,
+    helpOpen,
+    settingsOpen,
+    addingColumn,
+    paletteOpen,
+    templatesOpen,
+    saveFilterOpen,
+  ]);
 
   const chooseTheme = (next: Theme) => {
     applyTheme(next);
     setTheme(next);
   };
+
+  const handleExportPng = async () => {
+    const node = boardRef.current;
+    if (!node) {
+      notify({ tone: 'error', message: 'Dışa aktarılacak pano bulunamadı' });
+      return;
+    }
+    try {
+      const { toPng } = await import('html-to-image');
+      const width = Math.max(node.scrollWidth, node.clientWidth);
+      const height = Math.max(node.scrollHeight, node.clientHeight);
+      const background = getComputedStyle(document.body).backgroundColor;
+      const options = {
+        pixelRatio: 2,
+        backgroundColor: background,
+        width,
+        height,
+        skipFonts: true,
+        style: { width: `${width}px`, height: `${height}px` },
+      };
+      const dataUrl = await toPng(node, options);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `pano-${new Date().toISOString().slice(0, 10)}.png`;
+      link.click();
+      notify({ tone: 'success', message: 'Pano PNG olarak indirildi' });
+      sounds.success();
+    } catch (error) {
+      notify({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'PNG oluşturulamadı',
+      });
+    }
+  };
+
+  const handleUseTemplate = (template: BoardTemplate) => {
+    if (
+      !window.confirm(
+        `“${template.name}” şablonu mevcut panonun yerine yüklenecek. Devam edilsin mi?`,
+      )
+    ) {
+      return;
+    }
+    kanban.importBoard.mutate(template.build());
+    setTemplatesOpen(false);
+    setView('board');
+    sounds.success();
+  };
+
+  const persistFilters = (list: SavedFilter[]) => {
+    setSavedFilters(list);
+    try {
+      localStorage.setItem('pano-kayitli-filtreler', JSON.stringify(list));
+    } catch {
+      /* yoksay */
+    }
+  };
+
+  const handleSaveFilter = (name: string) => {
+    const filter: SavedFilter = {
+      id: crypto.randomUUID(),
+      name,
+      q: search,
+      label: labelFilter,
+      overdue: overdueOnly,
+    };
+    persistFilters([
+      ...savedFilters.filter((item) => item.name !== name),
+      filter,
+    ].slice(-12));
+    setSaveFilterOpen(false);
+    notify({ tone: 'success', message: `“${name}” filtresi kaydedildi` });
+  };
+
+  const applySavedFilter = (filter: SavedFilter) => {
+    setSearch(filter.q);
+    setLabelFilter(filter.label);
+    setOverdueOnly(filter.overdue);
+  };
+
+  const removeSavedFilter = (id: string) => {
+    persistFilters(savedFilters.filter((item) => item.id !== id));
+  };
+
+  const filterName =
+    [labelFilter, overdueOnly ? 'geciken' : '', search.trim()]
+      .filter(Boolean)
+      .join(' · ') || 'Filtrem';
 
   const handleSave = (draft: Draft, columnId: string) => {
     const patch = {
@@ -189,6 +406,7 @@ export default function App() {
 
   const handleDragStart = (event: DragStartEvent) => {
     if (!board) return;
+    sounds.pick();
     const found = findCard(board, String(event.active.id));
     setActiveCard(found?.card ?? null);
   };
@@ -224,6 +442,11 @@ export default function App() {
     }
 
     kanban.moveCard.mutate({ cardId: activeId, toColumnId: targetColumnId, toIndex });
+    sounds.drop();
+    if (/(bitti|done|tamam|yayında|yayinda)/i.test(target.title)) {
+      burstConfetti();
+      sounds.success();
+    }
   };
 
   const submitColumn = (event: React.FormEvent) => {
@@ -272,6 +495,132 @@ export default function App() {
       });
     }
   };
+
+  const paletteItems: PaletteItem[] = [
+    {
+      id: 'new-card',
+      label: 'Yeni kart',
+      hint: 'İlk kolona kart ekle',
+      group: 'Komutlar',
+      icon: <Plus size={15} />,
+      keywords: 'ekle kart',
+      run: () => {
+        const first = board?.columns[0];
+        if (first) setEditor({ columnId: first.id, card: null });
+      },
+    },
+    {
+      id: 'new-column',
+      label: 'Yeni kolon',
+      hint: 'Panoya kolon ekle',
+      group: 'Komutlar',
+      icon: <CirclePlus size={15} />,
+      keywords: 'kolon ekle',
+      run: () => setAddingColumn(true),
+    },
+    {
+      id: 'templates',
+      label: 'Şablon panolar',
+      hint: 'Sprint, içerik takvimi, kişisel',
+      group: 'Komutlar',
+      icon: <LayoutTemplate size={15} />,
+      keywords: 'şablon hazır pano',
+      run: () => setTemplatesOpen(true),
+    },
+    {
+      id: 'view-board',
+      label: 'Pano görünümü',
+      group: 'Görünüm',
+      icon: <LayoutGrid size={15} />,
+      keywords: 'kanban board',
+      run: () => setView('board'),
+    },
+    {
+      id: 'view-calendar',
+      label: 'Takvim görünümü',
+      group: 'Görünüm',
+      icon: <CalendarDays size={15} />,
+      keywords: 'takvim tarih',
+      run: () => setView('calendar'),
+    },
+    {
+      id: 'export-png',
+      label: 'PNG olarak indir',
+      hint: 'Panonun görüntüsünü kaydet',
+      group: 'Komutlar',
+      icon: <ImageDown size={15} />,
+      keywords: 'resim görüntü',
+      run: () => void handleExportPng(),
+    },
+    {
+      id: 'export-json',
+      label: 'JSON yedeği indir',
+      hint: 'Panoyu dosyaya aktar',
+      group: 'Komutlar',
+      icon: <Download size={15} />,
+      keywords: 'yedek dışa aktar',
+      run: () => void handleExport(),
+    },
+    ...(isFiltering
+      ? [
+          {
+            id: 'save-filter',
+            label: 'Filtreyi kaydet',
+            hint: filterName,
+            group: 'Komutlar',
+            icon: <Bookmark size={15} />,
+            keywords: 'kaydet görünüm',
+            run: () => setSaveFilterOpen(true),
+          } satisfies PaletteItem,
+        ]
+      : []),
+    {
+      id: 'settings',
+      label: 'Görünüm ayarları',
+      hint: 'Renk paleti, ses, konfeti',
+      group: 'Komutlar',
+      icon: <Settings size={15} />,
+      keywords: 'tema renk ayar',
+      run: () => setSettingsOpen(true),
+    },
+    {
+      id: 'help',
+      label: 'Klavye kısayolları',
+      group: 'Komutlar',
+      icon: <CircleHelp size={15} />,
+      keywords: 'yardım kısayol',
+      run: () => setHelpOpen(true),
+    },
+    ...TEMPLATES.map((template) => ({
+      id: `template-${template.id}`,
+      label: `Şablon: ${template.name}`,
+      hint: template.note,
+      group: 'Şablonlar',
+      icon: <LayoutTemplate size={15} />,
+      keywords: 'pano hazır',
+      run: () => handleUseTemplate(template),
+    })),
+    ...THEMES.map((item) => ({
+      id: `theme-${item.id}`,
+      label: `Tema: ${item.name}`,
+      hint: item.note,
+      group: 'Temalar',
+      icon: <Palette size={15} />,
+      keywords: 'renk palet tema',
+      run: () => chooseTheme(item),
+    })),
+    ...(board?.columns.flatMap((column) =>
+      column.cards.map((card) => ({
+        id: `card-${card.id}`,
+        label: card.title,
+        hint: column.title,
+        group: 'Kartlar',
+        icon: <Layers size={15} />,
+        keywords: card.label ?? '',
+        run: () => setEditor({ columnId: column.id, card }),
+      })),
+    ) ?? []),
+  ];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -324,6 +673,37 @@ export default function App() {
             )}
           </div>
 
+          <div className="flex items-center rounded-xl border border-line-2 bg-surface/80 p-0.5">
+            <button
+              type="button"
+              aria-label="Pano görünümü"
+              aria-pressed={view === 'board'}
+              onClick={() => setView('board')}
+              className={`flex items-center gap-1.5 rounded-[9px] px-2.5 py-2 text-[12px] font-bold transition ${
+                view === 'board'
+                  ? 'bg-ink text-paper shadow-sm'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              <LayoutGrid size={15} />
+              <span className="hidden lg:inline">Pano</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Takvim görünümü"
+              aria-pressed={view === 'calendar'}
+              onClick={() => setView('calendar')}
+              className={`flex items-center gap-1.5 rounded-[9px] px-2.5 py-2 text-[12px] font-bold transition ${
+                view === 'calendar'
+                  ? 'bg-ink text-paper shadow-sm'
+                  : 'text-muted hover:text-ink'
+              }`}
+            >
+              <CalendarDays size={15} />
+              <span className="hidden lg:inline">Takvim</span>
+            </button>
+          </div>
+
           <input
             ref={fileRef}
             type="file"
@@ -331,6 +711,26 @@ export default function App() {
             onChange={handleImportFile}
             className="hidden"
           />
+
+          <button
+            type="button"
+            aria-label="Komut paleti"
+            title="Komut paleti (Ctrl+K)"
+            onClick={() => setPaletteOpen(true)}
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-surface/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
+          >
+            <Command size={17} />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Panoyu PNG olarak indir"
+            title="PNG olarak indir"
+            onClick={() => void handleExportPng()}
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-surface/80 text-muted transition hover:border-ink/20 hover:text-ink lg:grid"
+          >
+            <ImageDown size={17} />
+          </button>
 
           <button
             type="button"
@@ -419,19 +819,43 @@ export default function App() {
             );
           })}
 
+          <button
+            type="button"
+            aria-pressed={overdueOnly}
+            onClick={() => setOverdueOnly(!overdueOnly)}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-semibold transition ${
+              overdueOnly
+                ? 'border-coral bg-coral text-[var(--color-on-accent)]'
+                : 'border-line-2 bg-surface/70 text-ink-2 hover:border-coral/40 hover:text-coral'
+            }`}
+          >
+            <CalendarDays size={12} /> Geciken
+          </button>
+
           <div className="ml-auto flex items-center gap-2">
             {isFiltering ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch('');
-                  setLabelFilter(null);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line-2 bg-surface/80 px-2.5 py-1.5 text-[12px] font-semibold text-ink-2 transition hover:border-ink/25"
-              >
-                <RotateCcw size={13} />
-                Filtreyi temizle
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setSaveFilterOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line-2 bg-surface/80 px-2.5 py-1.5 text-[12px] font-semibold text-ink-2 transition hover:border-ink/25"
+                >
+                  <Bookmark size={13} />
+                  Kaydet
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('');
+                    setLabelFilter(null);
+                    setOverdueOnly(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-line-2 bg-surface/80 px-2.5 py-1.5 text-[12px] font-semibold text-ink-2 transition hover:border-ink/25"
+                >
+                  <RotateCcw size={13} />
+                  Temizle
+                </button>
+              </>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-lg border border-line-2/80 bg-surface/70 px-2.5 py-1.5 font-mono text-[11px] font-bold text-muted">
                 <Layers size={13} />
@@ -440,6 +864,36 @@ export default function App() {
             )}
           </div>
         </div>
+
+        {savedFilters.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-1.5">
+            <span className="mr-1 inline-flex items-center gap-1 text-[11px] font-bold text-muted">
+              <Bookmark size={12} /> Kayıtlı
+            </span>
+            {savedFilters.map((filter) => (
+              <span
+                key={filter.id}
+                className="inline-flex items-center overflow-hidden rounded-lg border border-line-2 bg-surface/70"
+              >
+                <button
+                  type="button"
+                  onClick={() => applySavedFilter(filter)}
+                  className="px-2.5 py-1.5 text-[11.5px] font-semibold text-ink-2 transition hover:text-ink"
+                >
+                  {filter.name}
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${filter.name} filtresini sil`}
+                  onClick={() => removeSavedFilter(filter.id)}
+                  className="grid h-7 w-6 place-items-center text-faint transition hover:text-coral"
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
 
         {isFiltering && (
           <p className="mb-3 text-[12.5px] text-muted">
@@ -451,8 +905,11 @@ export default function App() {
               </>
             )}
             {labelFilter && <> · etiket: {labelFilter}</>}
+            {overdueOnly && <> · yalnız gecikenler</>}
           </p>
         )}
+
+        {board && <StatsBar {...stats} />}
 
         {isLoading && (
           <div className="flex gap-4 overflow-hidden pb-8">
@@ -500,6 +957,8 @@ export default function App() {
         )}
 
         {board && visible && (
+          <div ref={boardRef} className="min-w-0 flex-1">
+            {view === 'board' ? (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -514,6 +973,7 @@ export default function App() {
                   column={column}
                   index={index}
                   isFiltering={isFiltering}
+                  extras={extras}
                   onAddCard={(columnId) =>
                     setEditor({ columnId, card: null })
                   }
@@ -598,9 +1058,20 @@ export default function App() {
             </div>
 
             <DragOverlay>
-              {activeCard ? <CardPreview card={activeCard} /> : null}
+              {activeCard ? (
+                <CardPreview card={activeCard} extra={extras[activeCard.id]} />
+              ) : null}
             </DragOverlay>
           </DndContext>
+            ) : (
+              <CalendarView
+                board={board}
+                onOpenCard={(card, columnId) =>
+                  setEditor({ columnId, card })
+                }
+              />
+            )}
+          </div>
         )}
 
         <footer className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line/70 pt-4 text-[11px] font-semibold text-faint">
@@ -619,10 +1090,27 @@ export default function App() {
         open={Boolean(editor)}
         column={editorColumn}
         card={editor?.card ?? null}
+        extra={editor?.card ? extras[editor.card.id] : undefined}
         labels={labels}
         onClose={() => setEditor(null)}
         onSave={handleSave}
         onDelete={editor?.card ? handleDeleteFromDialog : undefined}
+        onMeta={(patch) => {
+          if (!editor?.card) return;
+          kanban.setCardMeta.mutate({ id: editor.card.id, ...patch });
+        }}
+        onAddChecklist={(text) => {
+          if (!editor?.card) return;
+          kanban.addChecklist.mutate({ cardId: editor.card.id, text });
+        }}
+        onToggleChecklist={(itemId, done) => {
+          kanban.toggleChecklist.mutate({ itemId, done });
+          if (done) sounds.check();
+        }}
+        onDeleteChecklist={(itemId) => {
+          if (!editor?.card) return;
+          kanban.deleteChecklist.mutate({ cardId: editor.card.id, itemId });
+        }}
       />
 
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
@@ -630,8 +1118,45 @@ export default function App() {
       <SettingsDialog
         open={settingsOpen}
         activeId={theme.id}
+        sound={soundOn}
+        confetti={confettiOn}
+        reducedMotion={reducedMotion}
         onSelect={chooseTheme}
+        onToggle={(key, value) => {
+          if (key === 'sound') {
+            setSoundOn(value);
+            setSoundEnabled(value);
+          } else if (key === 'confetti') {
+            setConfettiOn(value);
+            try {
+              localStorage.setItem('pano-konfeti', value ? '1' : '0');
+            } catch {
+              /* yoksay */
+            }
+          } else {
+            setReducedMotion(value);
+          }
+        }}
         onClose={() => setSettingsOpen(false)}
+      />
+
+      <CommandPalette
+        open={paletteOpen}
+        items={paletteItems}
+        onClose={() => setPaletteOpen(false)}
+      />
+
+      <TemplatesDialog
+        open={templatesOpen}
+        onClose={() => setTemplatesOpen(false)}
+        onUse={handleUseTemplate}
+      />
+
+      <SaveFilterDialog
+        open={saveFilterOpen}
+        initialName={filterName}
+        onClose={() => setSaveFilterOpen(false)}
+        onSave={handleSaveFilter}
       />
 
       <Toasts
