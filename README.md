@@ -8,6 +8,8 @@
 
 ![Gece teması](docs/ekran-gece.png)
 
+![Renk paletleri](docs/paletler.png)
+
 Ajan Haftası · Yarışma 01 teslimi. `api/` ve `web/` ayrı iki proje; kökten tek komutla birlikte kalkar.
 
 ## Hızlı başlangıç
@@ -39,7 +41,7 @@ npm --prefix web install && npm --prefix web run dev   # :5173
 - Klavye: `N` yeni kart, `/` aramaya odak, `Esc` kapat, `?` kısayollar
 - Kart silmede "Geri al"
 - JSON yedek indir / yedekten yükle (`GET /api/export`, `POST /api/import`)
-- **Görünüm ayarları:** Şeker / Orman / Okyanus / **Gece** paletleri; anında uygulanır ve tarayıcıda saklanır
+- **Görünüm ayarları:** 8 palet — Şeker, Orman, Okyanus, Gece, Lavanta, Gün Batımı, Kâğıt, Neon; anında uygulanır ve tarayıcıda saklanır
 - SQLite ile kalıcı veri: sunucu kapanıp açılsa da pano yerinde
 
 ## Klasör yapısı

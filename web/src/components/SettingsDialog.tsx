@@ -22,7 +22,7 @@ export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Görünüm ayarları"
-        className="w-full max-w-2xl animate-pop rounded-2xl bg-surface p-5 shadow-pop"
+        className="max-h-[90vh] w-full max-w-3xl animate-pop overflow-y-auto rounded-2xl bg-surface p-5 shadow-pop"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -46,7 +46,7 @@ export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
           </button>
         </div>
 
-        <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-2 gap-2.5 md:grid-cols-4">
           {THEMES.map((theme) => {
             const selected = theme.id === activeId;
             return (
