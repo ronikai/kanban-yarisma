@@ -1,10 +1,12 @@
 # Pano — Kanban Klonu
 
-**Canlı önizleme (statik):** https://kanban-ajan.surge.sh · **Kaynak:** https://github.com/ronikai/kanban-yarisma
+**Canlı demo:** https://kanban-ajan.surge.sh · **Kaynak:** https://github.com/ronikai/kanban-yarisma
 
-> Surge statik hosting olduğu için API orada çalışmaz; önizleme, API'ye ulaşamadığını söyleyen hata ekranını gösterir. Tam sürüm lokalde `npm run dev` ile açılır.
+> Surge'daki sürüm **tarayıcı deposuyla** çalışan bir demodur: veriler o tarayıcıda kalır, API gerektirmez. Yarışma teslimi gerçek API'ye bağlıdır ve lokalde `npm run dev` ile çalışır. Demoda kolon/kart ekleme, sürükle-bırak, arama ve dört tema çalışır.
 
 ![Pano ekran görüntüsü](docs/ekran.png)
+
+![Gece teması](docs/ekran-gece.png)
 
 Ajan Haftası · Yarışma 01 teslimi. `api/` ve `web/` ayrı iki proje; kökten tek komutla birlikte kalkar.
 
@@ -37,7 +39,7 @@ npm --prefix web install && npm --prefix web run dev   # :5173
 - Klavye: `N` yeni kart, `/` aramaya odak, `Esc` kapat, `?` kısayollar
 - Kart silmede "Geri al"
 - JSON yedek indir / yedekten yükle (`GET /api/export`, `POST /api/import`)
-- **Görünüm ayarları:** Şeker / Orman / Okyanus paletleri, anında uygulanır ve tarayıcıda saklanır
+- **Görünüm ayarları:** Şeker / Orman / Okyanus / **Gece** paletleri; anında uygulanır ve tarayıcıda saklanır
 - SQLite ile kalıcı veri: sunucu kapanıp açılsa da pano yerinde
 
 ## Klasör yapısı
@@ -90,13 +92,13 @@ Hata biçimi tek: `{ "error": { "code": "VALIDATION_ERROR", "message": "..." } }
 
 ## Yayın (Surge)
 
-Surge yalnızca statik dosya barındırır; API orada çalışmaz. Bu yüzden yayınlanan build bir **tasarım önizlemesidir**: API'ye ulaşamadığında uygulama bunu açıkça söyler ve tekrar dene düğmesi gösterir. Jüri değerlendirmesi lokalde, `npm run dev` ile yapılır.
+Surge yalnızca statik dosya barındırır. Yayındaki **demo**, veriyi tarayıcı deposunda tutarak tüm etkileşimleri çalıştırır; jüri değerlendirmesi ise lokalde `npm run dev` ile gerçek API + SQLite üzerinden yapılır.
 
 ```bash
-npm run deploy            # build + surge web/dist (etkileşimli alan adı seçimi)
+npm run deploy            # build + surge web/dist kanban-ajan.surge.sh
 ```
 
-İlk kullanımda bir kez `surge login` gerekir.
+İlk kullanımda bir kez `surge login` gerekir. Not: `npm run deploy` API'ye bağlı build'i yayınlar; şu anki demo build'i ayrı üretilmiştir.
 
 ## 5 dakikalık sunum akışı
 

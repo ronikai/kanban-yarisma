@@ -8,7 +8,9 @@ export function labelSwatch(label: string): Swatch {
   const column = columnSwatch(hash);
   return {
     bg: column.wash,
-    fg: `color-mix(in srgb, ${column.accent} 76%, #101828)`,
+    fg: activeTheme().dark
+      ? `color-mix(in srgb, ${column.accent} 72%, #ffffff)`
+      : `color-mix(in srgb, ${column.accent} 76%, #101828)`,
     dot: column.accent,
     line: column.line,
   };

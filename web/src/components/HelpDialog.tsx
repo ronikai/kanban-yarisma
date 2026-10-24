@@ -29,7 +29,7 @@ export function HelpDialog({ open, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Klavye kısayolları"
-        className="w-full max-w-md animate-pop rounded-2xl bg-[#fffdf8] p-5 shadow-pop"
+        className="w-full max-w-md animate-pop rounded-2xl bg-surface p-5 shadow-pop"
       >
         <div className="flex items-start justify-between">
           <div>

@@ -22,7 +22,7 @@ export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Görünüm ayarları"
-        className="w-full max-w-xl animate-pop rounded-2xl bg-[#fffef9] p-5 shadow-pop"
+        className="w-full max-w-2xl animate-pop rounded-2xl bg-surface p-5 shadow-pop"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -46,7 +46,7 @@ export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
           </button>
         </div>
 
-        <div className="mt-4 grid gap-2.5 sm:grid-cols-3">
+        <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
           {THEMES.map((theme) => {
             const selected = theme.id === activeId;
             return (
@@ -57,8 +57,8 @@ export function SettingsDialog({ open, activeId, onSelect, onClose }: Props) {
                 aria-pressed={selected}
                 className={`group rounded-xl border-2 p-2.5 text-left transition ${
                   selected
-                    ? 'border-ink bg-white shadow-lift'
-                    : 'border-line-2/70 bg-white/60 hover:border-ink/25 hover:bg-white'
+                    ? 'border-ink bg-surface-2 shadow-lift'
+                    : 'border-line-2/70 bg-surface-2/60 hover:border-ink/25 hover:bg-surface-2'
                 }`}
               >
                 <span

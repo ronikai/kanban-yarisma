@@ -11,19 +11,19 @@ const TONE = {
     icon: CheckCircle2,
     ring: 'border-mint/40',
     iconColor: 'text-mint',
-    action: 'bg-mint-soft text-mint hover:bg-mint hover:text-white',
+    action: 'bg-mint-soft text-mint hover:bg-mint hover:text-[var(--color-on-accent)]',
   },
   error: {
     icon: AlertCircle,
     ring: 'border-coral/40',
     iconColor: 'text-coral',
-    action: 'bg-coral-soft text-coral hover:bg-coral hover:text-white',
+    action: 'bg-coral-soft text-coral hover:bg-coral hover:text-[var(--color-on-accent)]',
   },
   info: {
     icon: Info,
     ring: 'border-sky/40',
     iconColor: 'text-sky',
-    action: 'bg-sky-soft text-sky hover:bg-sky hover:text-white',
+    action: 'bg-sky-soft text-sky hover:bg-sky hover:text-[var(--color-on-accent)]',
   },
 } as const;
 
@@ -39,7 +39,7 @@ export function Toasts({ toasts, onDismiss }: Props) {
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto flex w-full max-w-sm animate-slide items-center gap-2.5 rounded-xl border ${tone.ring} bg-[#fffdf8] py-2.5 pl-3 pr-2 shadow-float`}
+            className={`pointer-events-auto flex w-full max-w-sm animate-slide items-center gap-2.5 rounded-xl border ${tone.ring} bg-surface py-2.5 pl-3 pr-2 shadow-float`}
           >
             <Icon size={17} className={`shrink-0 ${tone.iconColor}`} />
             <p className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-ink-2">

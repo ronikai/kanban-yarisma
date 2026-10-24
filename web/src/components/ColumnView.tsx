@@ -48,7 +48,7 @@ export function ColumnView({
 
   return (
     <section
-      className="flex w-[300px] shrink-0 flex-col overflow-hidden rounded-[18px] border-2 bg-white shadow-lift"
+      className="flex w-[300px] shrink-0 flex-col overflow-hidden rounded-[18px] border-2 bg-surface shadow-lift"
       style={{ borderColor: palette.line }}
     >
       <header
@@ -70,18 +70,18 @@ export function ColumnView({
             }}
             maxLength={500}
             aria-label="Kolon adı"
-            className="min-w-0 flex-1 rounded-md bg-white/95 px-2 py-1 font-display text-[15px] font-semibold text-ink outline-none ring-2 ring-white/60"
+            className="min-w-0 flex-1 rounded-md bg-surface/95 px-2 py-1 font-display text-[15px] font-semibold text-ink outline-none ring-2 ring-line/60"
           />
         ) : (
           <h2
             onDoubleClick={startEditing}
             title="Adı düzenlemek için çift tıkla"
-            className="truncate font-display text-[16px] font-semibold tracking-[0.01em] text-white"
+            className="truncate font-display text-[16px] font-semibold tracking-[0.01em] text-[var(--color-on-accent)]"
           >
             {column.title}
           </h2>
         )}
-        <span className="rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-extrabold text-white">
+        <span className="rounded-full bg-black/15 px-2 py-0.5 text-[11px] font-extrabold text-[var(--color-on-accent)]">
           {column.cards.length}
         </span>
         <span className="ml-auto flex items-center gap-0.5">
@@ -89,7 +89,7 @@ export function ColumnView({
             type="button"
             aria-label={`${column.title} kolonunu yeniden adlandır`}
             onClick={startEditing}
-            className="grid h-7 w-7 place-items-center rounded-lg text-white/70 transition hover:bg-white/20 hover:text-white"
+            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-on-accent)] opacity-70 transition hover:bg-black/10 hover:opacity-100"
           >
             <Pencil size={13} />
           </button>
@@ -97,7 +97,7 @@ export function ColumnView({
             type="button"
             aria-label={`${column.title} kolonunu sil`}
             onClick={() => onDeleteColumn(column)}
-            className="grid h-7 w-7 place-items-center rounded-lg text-white/70 transition hover:bg-white/20 hover:text-white"
+            className="grid h-7 w-7 place-items-center rounded-lg text-[var(--color-on-accent)] opacity-70 transition hover:bg-black/10 hover:opacity-100"
           >
             <Trash2 size={14} />
           </button>
@@ -107,7 +107,7 @@ export function ColumnView({
       <div
         ref={setNodeRef}
         className={`flex min-h-[150px] flex-1 flex-col gap-2 px-2.5 py-2.5 transition-colors ${
-          isOver ? 'bg-white/70' : ''
+          isOver ? 'bg-surface/70' : ''
         }`}
         style={{ background: palette.wash }}
       >
@@ -130,7 +130,7 @@ export function ColumnView({
         {column.cards.length === 0 && (
           <div
             className={`grid flex-1 place-items-center rounded-xl border-2 border-dashed px-4 py-8 text-center transition ${
-              isOver ? 'border-ink/25 bg-white/70' : 'border-ink/10 bg-white/40'
+              isOver ? 'border-ink/25 bg-surface/70' : 'border-ink/10 bg-surface/40'
             }`}
           >
             <p className="text-[12.5px] font-semibold leading-relaxed text-muted">
@@ -153,7 +153,7 @@ export function ColumnView({
       <button
         type="button"
         onClick={() => onAddCard(column.id)}
-        className="mx-2.5 mb-2.5 flex items-center justify-center gap-1.5 rounded-xl border-2 border-white bg-white px-3 py-2 text-[12.5px] font-extrabold transition hover:border-current focus-visible:outline-2 focus-visible:outline-coral"
+        className="mx-2.5 mb-2.5 flex items-center justify-center gap-1.5 rounded-xl border-2 border-surface bg-surface px-3 py-2 text-[12.5px] font-extrabold transition hover:border-current focus-visible:outline-2 focus-visible:outline-coral"
         style={{ color: palette.accent }}
       >
         <CirclePlus size={15} strokeWidth={2.6} />

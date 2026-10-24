@@ -16,6 +16,16 @@
   --color-line: #dce7da;
   --color-line-2: #c9d8c7;
 
+  /* yüzeyler: temaya göre açık/koyu */
+  --color-surface: #fffef9;
+  --color-surface-2: #ffffff;
+  --color-on-accent: #fffaf1;
+  --color-on-strong: #fffdf6;
+  --color-wash-1: #ffe0ea;
+  --color-wash-2: #d6f7ea;
+  --color-wash-3: #e6e2ff;
+  --color-wash-4: #fff0c8;
+
   /* şeker paleti */
   --color-coral: #e8365d;
   --color-coral-soft: #ffe3ea;
@@ -90,10 +100,10 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(40rem 28rem at -2% -4%, #ffe0ea 0%, transparent 62%),
-    radial-gradient(36rem 26rem at 102% 2%, #d6f7ea 0%, transparent 58%),
-    radial-gradient(32rem 24rem at 94% 104%, #e6e2ff 0%, transparent 62%),
-    radial-gradient(30rem 22rem at 4% 102%, #fff0c8 0%, transparent 60%);
+    radial-gradient(40rem 28rem at -2% -4%, var(--color-wash-1) 0%, transparent 62%),
+    radial-gradient(36rem 26rem at 102% 2%, var(--color-wash-2) 0%, transparent 58%),
+    radial-gradient(32rem 24rem at 94% 104%, var(--color-wash-3) 0%, transparent 62%),
+    radial-gradient(30rem 22rem at 4% 102%, var(--color-wash-4) 0%, transparent 60%);
   opacity: 0.8;
 }
 
@@ -153,26 +163,26 @@ body::before {
   }
   .btn-primary {
     background: var(--color-ink);
-    color: #fffdf6;
-    box-shadow: 0 3px 0 #0e1628;
+    color: var(--color-on-strong);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--color-ink) 70%, #000000);
   }
   .btn-primary:hover {
-    background: #2a3757;
+    filter: brightness(1.08);
   }
   .btn-coral {
     background: var(--color-coral);
-    color: #fff7f9;
-    box-shadow: 0 3px 0 #b3123a;
+    color: var(--color-on-accent);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--color-coral) 68%, #000000);
   }
   .btn-coral:hover {
-    background: #f0446b;
+    filter: brightness(1.06);
   }
   .btn-ghost {
     background: transparent;
     color: var(--color-ink-2);
   }
   .btn-ghost:hover {
-    background: rgba(31, 42, 68, 0.06);
+    background: color-mix(in srgb, var(--color-ink) 10%, transparent);
     box-shadow: none;
     transform: none;
   }
@@ -180,7 +190,7 @@ body::before {
     width: 100%;
     border-radius: 12px;
     border: 1.5px solid var(--color-line-2);
-    background: #fffef9;
+    background: var(--color-surface-2);
     padding: 10px 12px;
     font-size: 14px;
     font-weight: 600;
@@ -206,7 +216,7 @@ body::before {
     border-radius: 6px;
     border: 1.5px solid var(--color-line-2);
     border-bottom-width: 3px;
-    background: #fffef9;
+    background: var(--color-surface-2);
     color: var(--color-muted);
   }
   .card-clamp {

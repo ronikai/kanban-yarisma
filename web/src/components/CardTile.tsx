@@ -134,7 +134,7 @@ export function CardTile({ card, columnId, onOpen, onDelete, index = 0 }: Props)
           onOpen?.(card, columnId);
         }
       }}
-      className="group relative cursor-grab select-none rounded-[14px] border-[1.5px] border-line bg-white p-3 shadow-[0_1px_0_rgba(31,42,68,0.04)] transition-[box-shadow,border-color] duration-200 hover:border-ink/20 hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral active:cursor-grabbing"
+      className="group relative cursor-grab select-none rounded-[14px] border-[1.5px] border-line bg-surface p-3 shadow-[0_1px_0_rgba(31,42,68,0.04)] transition-[box-shadow,border-color] duration-200 hover:border-ink/20 hover:shadow-lift focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral active:cursor-grabbing"
     >
       <CardBody
         card={card}
@@ -146,7 +146,7 @@ export function CardTile({ card, columnId, onOpen, onDelete, index = 0 }: Props)
 
 export function CardPreview({ card }: { card: Card }) {
   return (
-    <div className="w-[280px] rotate-[2.5deg] rounded-[14px] border-2 border-ink/20 bg-white p-3 shadow-float">
+    <div className="w-[280px] rotate-[2.5deg] rounded-[14px] border-2 border-ink/20 bg-surface p-3 shadow-float">
       <CardBody card={card} grip={false} />
     </div>
   );

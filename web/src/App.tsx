@@ -306,7 +306,7 @@ export default function App() {
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Kart, açıklama veya etiket ara…"
               aria-label="Kart ara"
-              className="field bg-white/90 pl-9 pr-11"
+              className="field bg-surface/90 pl-9 pr-11"
             />
             {search ? (
               <button
@@ -337,7 +337,7 @@ export default function App() {
             aria-label="Panoyu JSON olarak indir"
             title="Yedek al"
             onClick={() => void handleExport()}
-            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-surface/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
           >
             <Download size={17} />
           </button>
@@ -347,7 +347,7 @@ export default function App() {
             aria-label="JSON dosyasından pano yükle"
             title="Yedekten yükle"
             onClick={() => fileRef.current?.click()}
-            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-surface/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
           >
             <Upload size={17} />
           </button>
@@ -357,7 +357,7 @@ export default function App() {
             aria-label="Görünüm ayarları"
             title="Görünüm"
             onClick={() => setSettingsOpen(true)}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-surface/80 text-muted transition hover:border-ink/20 hover:text-ink"
           >
             <Settings size={18} />
           </button>
@@ -366,7 +366,7 @@ export default function App() {
             type="button"
             aria-label="Klavye kısayolları"
             onClick={() => setHelpOpen(true)}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-surface/80 text-muted transition hover:border-ink/20 hover:text-ink"
           >
             <CircleHelp size={18} />
           </button>
@@ -390,7 +390,7 @@ export default function App() {
             className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-semibold transition ${
               labelFilter === null
                 ? 'border-ink bg-ink text-paper'
-                : 'border-line-2 bg-[#fffdf8]/70 text-ink-2 hover:border-ink/25'
+                : 'border-line-2 bg-surface/70 text-ink-2 hover:border-ink/25'
             }`}
           >
             Tümü
@@ -406,13 +406,13 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-semibold transition hover:brightness-[0.97]"
                 style={
                   active
-                    ? { background: swatch.dot, borderColor: swatch.dot, color: '#fffaf1' }
+                    ? { background: swatch.dot, borderColor: swatch.dot, color: 'var(--color-on-accent)' }
                     : { background: swatch.bg, borderColor: swatch.line, color: swatch.fg }
                 }
               >
                 <span
                   className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: active ? '#fffaf1' : swatch.dot }}
+                  style={{ background: active ? 'var(--color-on-accent)' : swatch.dot }}
                 />
                 {label}
               </button>
@@ -427,13 +427,13 @@ export default function App() {
                   setSearch('');
                   setLabelFilter(null);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line-2 bg-[#fffdf8]/80 px-2.5 py-1.5 text-[12px] font-semibold text-ink-2 transition hover:border-ink/25"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-line-2 bg-surface/80 px-2.5 py-1.5 text-[12px] font-semibold text-ink-2 transition hover:border-ink/25"
               >
                 <RotateCcw size={13} />
                 Filtreyi temizle
               </button>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-lg border border-line-2/80 bg-[#fffef9]/70 px-2.5 py-1.5 font-mono text-[11px] font-bold text-muted">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-line-2/80 bg-surface/70 px-2.5 py-1.5 font-mono text-[11px] font-bold text-muted">
                 <Layers size={13} />
                 {board?.columns.length ?? 0} kolon, {totalCards} kart
               </span>
@@ -459,13 +459,13 @@ export default function App() {
             {[0, 1, 2, 3].map((index) => (
               <div
                 key={index}
-                className="w-[300px] shrink-0 rounded-2xl border border-line/70 bg-white/40 p-3"
+                className="w-[300px] shrink-0 rounded-2xl border border-line/70 bg-surface/40 p-3"
               >
                 <div className="mb-3 h-4 w-28 animate-pulse rounded-md bg-paper-3" />
                 {[0, 1, 2].map((card) => (
                   <div
                     key={card}
-                    className="mb-2 h-24 animate-pulse rounded-xl bg-white/70"
+                    className="mb-2 h-24 animate-pulse rounded-xl bg-surface/70"
                   />
                 ))}
               </div>
@@ -474,7 +474,7 @@ export default function App() {
         )}
 
         {isError && (
-          <div className="mx-auto grid w-full max-w-lg place-items-center rounded-2xl border border-coral/25 bg-[#fffdf8] px-6 py-14 text-center shadow-lift">
+          <div className="mx-auto grid w-full max-w-lg place-items-center rounded-2xl border border-coral/25 bg-surface px-6 py-14 text-center shadow-lift">
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-coral-soft text-coral">
               <ServerOff size={22} />
             </span>
@@ -527,7 +527,7 @@ export default function App() {
               ))}
 
               {board.columns.length === 0 && !addingColumn && (
-                <div className="grid w-full max-w-xl place-items-center rounded-2xl border border-dashed border-line-2 bg-[#fffdf8]/60 px-6 py-14 text-center">
+                <div className="grid w-full max-w-xl place-items-center rounded-2xl border border-dashed border-line-2 bg-surface/60 px-6 py-14 text-center">
                   <span className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-soft text-amber">
                     <Layers size={22} />
                   </span>
@@ -550,7 +550,7 @@ export default function App() {
               {addingColumn ? (
                 <form
                   onSubmit={submitColumn}
-                  className="w-[300px] shrink-0 rounded-2xl border border-line-2 bg-[#fffdf8] p-3 shadow-lift"
+                  className="w-[300px] shrink-0 rounded-2xl border border-line-2 bg-surface p-3 shadow-lift"
                 >
                   <label
                     htmlFor="new-column"
@@ -590,7 +590,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setAddingColumn(true)}
-                  className="flex w-[300px] shrink-0 items-center justify-center gap-2 rounded-2xl border border-dashed border-line-2 bg-white/40 px-4 py-5 text-[13px] font-semibold text-muted transition hover:border-ink/25 hover:bg-white/70 hover:text-ink"
+                  className="flex w-[300px] shrink-0 items-center justify-center gap-2 rounded-2xl border border-dashed border-line-2 bg-surface/40 px-4 py-5 text-[13px] font-semibold text-muted transition hover:border-ink/25 hover:bg-surface/70 hover:text-ink"
                 >
                   <CirclePlus size={17} /> Yeni kolon
                 </button>

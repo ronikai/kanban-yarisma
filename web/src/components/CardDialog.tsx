@@ -96,7 +96,7 @@ export function CardDialog({
         role="dialog"
         aria-modal="true"
         aria-label={card ? 'Kart detayı' : 'Yeni kart'}
-        className="max-h-[92vh] w-full max-w-lg animate-pop overflow-y-auto rounded-t-2xl bg-[#fffdf8] shadow-pop sm:rounded-2xl"
+        className="max-h-[92vh] w-full max-w-lg animate-pop overflow-y-auto rounded-t-2xl bg-surface shadow-pop sm:rounded-2xl"
       >
         <div className="h-1.5 w-full bg-coral" />
         <div className="flex items-start justify-between gap-4 px-5 pt-4">
@@ -243,7 +243,7 @@ export function CardDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="btn border border-line-2 bg-white text-ink-2 hover:bg-paper-2"
+                className="btn border border-line-2 bg-surface-2 text-ink-2 hover:bg-paper-2"
               >
                 Vazgeç
               </button>
