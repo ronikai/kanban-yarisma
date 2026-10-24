@@ -1,5 +1,11 @@
 # Pano — Kanban Klonu
 
+**Canlı önizleme (statik):** https://kanban-ajan.surge.sh · **Kaynak:** https://github.com/ronikai/kanban-yarisma
+
+> Surge statik hosting olduğu için API orada çalışmaz; önizleme, API'ye ulaşamadığını söyleyen hata ekranını gösterir. Tam sürüm lokalde `npm run dev` ile açılır.
+
+![Pano ekran görüntüsü](docs/ekran.png)
+
 Ajan Haftası · Yarışma 01 teslimi. `api/` ve `web/` ayrı iki proje; kökten tek komutla birlikte kalkar.
 
 ## Hızlı başlangıç
