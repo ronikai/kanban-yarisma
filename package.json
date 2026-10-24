@@ -7,7 +7,7 @@
     "dev": "concurrently -n api,web -c cyan,magenta \"npm --prefix api run dev\" \"npm --prefix web run dev\"",
     "build": "npm --prefix web run build",
     "smoke": "node api/scripts/smoke.mjs",
-    "deploy": "npm --prefix web run build && surge web/dist",
+    "deploy": "npm --prefix web run build && surge web/dist kanban-ajan.surge.sh",
     "install:all": "npm install && npm --prefix api install && npm --prefix web install"
   },
   "devDependencies": {
