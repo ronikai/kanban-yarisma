@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Search,
   ServerOff,
+  Settings,
   Upload,
   X,
 } from 'lucide-react';
@@ -26,9 +27,11 @@ import { CardDialog, type Draft } from './components/CardDialog';
 import { CardPreview } from './components/CardTile';
 import { ColumnView } from './components/ColumnView';
 import { HelpDialog } from './components/HelpDialog';
+import { SettingsDialog } from './components/SettingsDialog';
 import { Toasts } from './components/Toasts';
 import { dueToIso, labelSwatch } from './design';
 import { findCard, useKanban } from './useKanban';
+import { applyTheme, storedTheme, type Theme } from './themes';
 import type { Card, Toast } from './types';
 
 export default function App() {
@@ -63,6 +66,8 @@ export default function App() {
     null,
   );
   const [helpOpen, setHelpOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => storedTheme());
   const [addingColumn, setAddingColumn] = useState(false);
   const [columnTitle, setColumnTitle] = useState('');
   const [activeCard, setActiveCard] = useState<Card | null>(null);
@@ -106,11 +111,15 @@ export default function App() {
           setAddingColumn(false);
           return;
         }
+        if (settingsOpen) {
+          setSettingsOpen(false);
+          return;
+        }
         if (typing) target?.blur();
         return;
       }
 
-      if (typing || editor || helpOpen) return;
+      if (typing || editor || helpOpen || settingsOpen) return;
 
       if (event.key === 'n' || event.key === 'N') {
         event.preventDefault();
@@ -127,7 +136,12 @@ export default function App() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [board, editor, helpOpen, addingColumn]);
+  }, [board, editor, helpOpen, settingsOpen, addingColumn]);
+
+  const chooseTheme = (next: Theme) => {
+    applyTheme(next);
+    setTheme(next);
+  };
 
   const handleSave = (draft: Draft, columnId: string) => {
     const patch = {
@@ -323,7 +337,7 @@ export default function App() {
             aria-label="Panoyu JSON olarak indir"
             title="Yedek al"
             onClick={() => void handleExport()}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink"
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
           >
             <Download size={17} />
           </button>
@@ -333,9 +347,19 @@ export default function App() {
             aria-label="JSON dosyasından pano yükle"
             title="Yedekten yükle"
             onClick={() => fileRef.current?.click()}
-            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink"
+            className="hidden h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink sm:grid"
           >
             <Upload size={17} />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Görünüm ayarları"
+            title="Görünüm"
+            onClick={() => setSettingsOpen(true)}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-line-2 bg-[#fffef9]/80 text-muted transition hover:border-ink/20 hover:text-ink"
+          >
+            <Settings size={18} />
           </button>
 
           <button
@@ -602,6 +626,13 @@ export default function App() {
       />
 
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      <SettingsDialog
+        open={settingsOpen}
+        activeId={theme.id}
+        onSelect={chooseTheme}
+        onClose={() => setSettingsOpen(false)}
+      />
 
       <Toasts
         toasts={toasts}

@@ -1,31 +1,22 @@
+import { activeTheme, type ColumnSwatch } from './themes';
+
 export type Swatch = { bg: string; fg: string; dot: string; line: string };
-
-const LABEL_SWATCHES: Swatch[] = [
-  { bg: '#ffe3ea', fg: '#a30d33', dot: '#e8365d', line: '#ffc3d3' },
-  { bg: '#fff1cc', fg: '#7a4b00', dot: '#e8930c', line: '#ffe1a0' },
-  { bg: '#d6f5e9', fg: '#06614a', dot: '#0b9b72', line: '#b2eeda' },
-  { bg: '#e3e9ff', fg: '#1e3a9e', dot: '#3b5bdb', line: '#c7d4ff' },
-  { bg: '#ede6ff', fg: '#4322a8', dot: '#7048e8', line: '#d8c9ff' },
-  { bg: '#ffe0ec', fg: '#8c0f42', dot: '#c2255c', line: '#ffc2d8' },
-];
-
-const COLUMN_SWATCHES = [
-  { wash: '#fff0f4', accent: '#e8365d', line: '#ffc9d7' },
-  { wash: '#fff8e1', accent: '#b87300', line: '#ffe3a3' },
-  { wash: '#e7faf2', accent: '#0b9b72', line: '#b9eedd' },
-  { wash: '#edf1ff', accent: '#3b5bdb', line: '#c7d4ff' },
-  { wash: '#f5efff', accent: '#7048e8', line: '#dccfff' },
-  { wash: '#ffede1', accent: '#e8590c', line: '#ffd2b8' },
-];
 
 export function labelSwatch(label: string): Swatch {
   let hash = 0;
   for (const char of label) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return LABEL_SWATCHES[hash % LABEL_SWATCHES.length];
+  const column = columnSwatch(hash);
+  return {
+    bg: column.wash,
+    fg: `color-mix(in srgb, ${column.accent} 76%, #101828)`,
+    dot: column.accent,
+    line: column.line,
+  };
 }
 
-export function columnSwatch(index: number) {
-  return COLUMN_SWATCHES[index % COLUMN_SWATCHES.length];
+export function columnSwatch(index: number): ColumnSwatch {
+  const columns = activeTheme().columns;
+  return columns[index % columns.length];
 }
 
 export type DueInfo = {

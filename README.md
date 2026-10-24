@@ -31,6 +31,7 @@ npm --prefix web install && npm --prefix web run dev   # :5173
 - Klavye: `N` yeni kart, `/` aramaya odak, `Esc` kapat, `?` kısayollar
 - Kart silmede "Geri al"
 - JSON yedek indir / yedekten yükle (`GET /api/export`, `POST /api/import`)
+- **Görünüm ayarları:** Şeker / Orman / Okyanus paletleri, anında uygulanır ve tarayıcıda saklanır
 - SQLite ile kalıcı veri: sunucu kapanıp açılsa da pano yerinde
 
 ## Klasör yapısı
