@@ -81,6 +81,16 @@ Hata biçimi tek: `{ "error": { "code": "VALIDATION_ERROR", "message": "..." } }
 - `VITE_API_URL` verilirse frontend API'yi başka bir adresten çağırır (varsayılan: aynı origin + Vite proxy).
 - Çalışan sürüm `prototype-v1` etiketiyle işaretlidir; geri dönmek için `git checkout prototype-v1`.
 
+## Yayın (Surge)
+
+Surge yalnızca statik dosya barındırır; API orada çalışmaz. Bu yüzden yayınlanan build bir **tasarım önizlemesidir**: API'ye ulaşamadığında uygulama bunu açıkça söyler ve tekrar dene düğmesi gösterir. Jüri değerlendirmesi lokalde, `npm run dev` ile yapılır.
+
+```bash
+npm run deploy            # build + surge web/dist (etkileşimli alan adı seçimi)
+```
+
+İlk kullanımda bir kez `surge login` gerekir.
+
 ## 5 dakikalık sunum akışı
 
 1. `npm run dev` — iki sunucu ayağa kalkar, pano 3 kolon / 9 kart gelir.
